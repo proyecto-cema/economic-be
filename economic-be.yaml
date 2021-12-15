@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: economic-be
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: economic-be
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  minReadySeconds: 5
+  template:
+    metadata:
+      labels:
+        app: economic-be
+    spec:
+      nodeSelector:
+        "beta.kubernetes.io/os": linux
+      containers:
+        - name: economic-be
+          image: cemaregistry.azurecr.io/cema/economic-be:$VERSION
+          ports:
+            - containerPort: 30027
+          imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: 150m
+            limits:
+              cpu: 250m
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: $ENV
+      imagePullSecrets:
+        - name: regcred
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: economic-be
+spec:
+  type: NodePort
+  ports:
+    - port: 30027
+      nodePort: 30027
+  selector:
+    app: economic-be
