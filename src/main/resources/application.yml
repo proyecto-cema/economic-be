@@ -25,7 +25,7 @@ spring:
     hikari:
       maximum-pool-size: 15
     type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:postgresql://localhost:5432/economic
+    url: jdbc:postgresql://192.168.100.5:5432/economic
     username: economic
     password: kk%5G2%4H^va42hH
 back-end:
