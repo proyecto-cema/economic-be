@@ -5,7 +5,7 @@ import com.cema.economic.domain.Operation;
 import com.cema.economic.entities.CemaOperation;
 import com.cema.economic.exceptions.NotFoundException;
 import com.cema.economic.exceptions.UnauthorizedException;
-import com.cema.economic.mapping.OperationMapping;
+import com.cema.economic.mapping.Mapping;
 import com.cema.economic.repositories.OperationRepository;
 import com.cema.economic.services.authorization.AuthorizationService;
 import com.cema.economic.services.client.administration.AdministrationClientService;
@@ -18,8 +18,7 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.ResponseHeader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -46,21 +45,20 @@ import java.util.stream.Collectors;
 @RequestMapping("/v1")
 @Api(produces = "application/json", value = "Allows interaction with the operation database. V1")
 @Validated
+@Slf4j
 public class OperationController {
 
     private static final String BASE_URL = "/operation/";
 
-    private final Logger LOG = LoggerFactory.getLogger(OperationController.class);
-
     private final OperationRepository operationRepository;
-    private final OperationMapping operationMapping;
+    private final Mapping<CemaOperation, Operation> operationMapping;
     private final AuthorizationService authorizationService;
     private final BovineClientService bovineClientService;
     private final OperationValidationService operationValidationService;
     private final AdministrationClientService administrationClientService;
     private final UsersClientService usersClientService;
 
-    public OperationController(OperationRepository operationRepository, OperationMapping operationMapping,
+    public OperationController(OperationRepository operationRepository, Mapping<CemaOperation, Operation> operationMapping,
                                AuthorizationService authorizationService, BovineClientService bovineClientService,
                                OperationValidationService operationValidationService,
                                AdministrationClientService administrationClientService,
@@ -86,7 +84,7 @@ public class OperationController {
                     value = "Operation data to be inserted.")
             @RequestBody @Valid Operation operation) {
 
-        LOG.info("Request to register new operation");
+        log.info("Request to register new operation");
 
         String cuig = operation.getEstablishmentCuig();
         if (!authorizationService.isOnTheSameEstablishment(cuig)) {
@@ -122,7 +120,7 @@ public class OperationController {
                     example = "123")
             @PathVariable("id") String id) {
 
-        LOG.info("Request for operation with id {}", id);
+        log.info("Request for operation with id {}", id);
 
         CemaOperation cemaOperation = operationRepository.findCemaOperationById(UUID.fromString(id));
         if (cemaOperation == null) {
@@ -158,7 +156,7 @@ public class OperationController {
                     example = "321")
             @RequestParam(value = "cuig") String cuig) {
 
-        LOG.info("Request to modify operation with id: {}", id);
+        log.info("Request to modify operation with id: {}", id);
 
         if (!authorizationService.isAdmin()) {
             cuig = authorizationService.getCurrentUserCuig();
@@ -167,7 +165,7 @@ public class OperationController {
         administrationClientService.validateEstablishment(cuig);
         CemaOperation cemaOperation = operationRepository.findCemaOperationByIdAndEstablishmentCuigIgnoreCase(UUID.fromString(id), cuig);
         if (cemaOperation == null) {
-            LOG.info("Operation doesn't exists");
+            log.info("Operation doesn't exists");
             throw new NotFoundException(String.format("Operation with id %s doesn't exits", id));
         }
 

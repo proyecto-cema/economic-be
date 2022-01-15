@@ -3,9 +3,8 @@ package com.cema.economic.controllers;
 
 import com.cema.economic.domain.Operation;
 import com.cema.economic.entities.CemaOperation;
-import com.cema.economic.exceptions.AlreadyExistsException;
 import com.cema.economic.exceptions.NotFoundException;
-import com.cema.economic.mapping.OperationMapping;
+import com.cema.economic.mapping.Mapping;
 import com.cema.economic.repositories.OperationRepository;
 import com.cema.economic.services.authorization.AuthorizationService;
 import com.cema.economic.services.client.administration.AdministrationClientService;
@@ -35,7 +34,7 @@ public class OperationControllerTest {
     @Mock
     private OperationRepository operationRepository;
     @Mock
-    private OperationMapping operationMapping;
+    private Mapping operationMapping;
     @Mock
     private AuthorizationService authorizationService;
     @Mock
