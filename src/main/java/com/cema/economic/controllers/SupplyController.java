@@ -246,4 +246,45 @@ public class SupplyController {
 
         return ResponseEntity.ok().headers(responseHeaders).body(supplies);
     }
+
+    @ApiOperation(value = "Retrieve a list of supplies matching the sent data", response = Supply.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Successfully found supplies", responseHeaders = {
+                    @ResponseHeader(name = "total-elements", response = String.class, description = "Total number of search results"),
+                    @ResponseHeader(name = "total-pages", response = String.class, description = "Total number of pages to navigate"),
+                    @ResponseHeader(name = "current-page", response = String.class, description = "The page being returned, zero indexed")
+            })
+    })
+    @PostMapping(value = BASE_URL + "search", produces = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<List<Supply>> searchSupplies(
+            @ApiParam(
+                    value = "The page you want to retrieve.",
+                    example = "1")
+            @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+            @ApiParam(
+                    value = "The maximum number of supplies to return per page.",
+                    example = "10")
+            @RequestParam(value = "size", required = false, defaultValue = "3") int size,
+            @ApiParam(
+                    value = "The supply data we are searching")
+            @RequestBody Supply supply) {
+
+        if (!authorizationService.isAdmin()) {
+            supply.setEstablishmentCuig(authorizationService.getCurrentUserCuig());
+        }
+
+        CemaSupply cemaSupply = supplyMapping.mapDomainToEntity(supply);
+
+        Page<CemaSupply> cemaSupplyPage = databaseService.searchSupplies(cemaSupply, supply.getCategoryName(), page, size);
+
+        List<CemaSupply> cemaSupplies = cemaSupplyPage.getContent();
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.set("total-elements", String.valueOf(cemaSupplyPage.getTotalElements()));
+        responseHeaders.set("total-pages", String.valueOf(cemaSupplyPage.getTotalPages()));
+        responseHeaders.set("current-page", String.valueOf(cemaSupplyPage.getNumber()));
+
+        List<Supply> supplies = cemaSupplies.stream().map(supplyMapping::mapEntityToDomain).collect(Collectors.toList());
+
+        return ResponseEntity.ok().headers(responseHeaders).body(supplies);
+    }
 }
