@@ -12,5 +12,7 @@ public interface SupplyRepository extends JpaRepository<CemaSupply, String> {
 
     CemaSupply findCemaSupplyByNameAndEstablishmentCuigIgnoreCase(String name, String cuig);
 
+    CemaSupply findCemaSupplyByNameIgnoreCase(String name);
+
     Page<CemaSupply> findAllByEstablishmentCuig(String cuig, Pageable paging);
 }

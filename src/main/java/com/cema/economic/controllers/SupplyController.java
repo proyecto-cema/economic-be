@@ -39,7 +39,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
@@ -58,14 +57,44 @@ public class SupplyController {
     private final DatabaseService databaseService;
 
     public SupplyController(SupplyRepository supplyRepository, Mapping<CemaSupply, Supply> supplyMapping,
-                               AuthorizationService authorizationService,
-                               AdministrationClientService administrationClientService,
+                            AuthorizationService authorizationService,
+                            AdministrationClientService administrationClientService,
                             DatabaseService databaseService) {
         this.supplyRepository = supplyRepository;
         this.supplyMapping = supplyMapping;
         this.authorizationService = authorizationService;
         this.administrationClientService = administrationClientService;
         this.databaseService = databaseService;
+    }
+
+    @ApiOperation(value = "Validate supply from name sent data", response = Supply.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 204, message = "Supply is valid"),
+            @ApiResponse(code = 404, message = "Supply not found"),
+            @ApiResponse(code = 401, message = "You are not allowed to view this supply"),
+            @ApiResponse(code = 422, message = "Invalid Supply")
+    })
+    @GetMapping(value = BASE_URL + "validate/{name}", produces = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<Void> validateSupplyByCuig(
+            @ApiParam(
+                    value = "The name of the supply you are looking for.",
+                    example = "123")
+            @PathVariable("name") String name) {
+
+        log.info("Request to validate supply with {}", name);
+
+        CemaSupply cemaSupply = supplyRepository.findCemaSupplyByNameIgnoreCase(name);
+        if (cemaSupply == null) {
+            throw new NotFoundException(String.format("Supply with name %s doesn't exits", name));
+        }
+
+        String cuig = cemaSupply.getEstablishmentCuig();
+
+        if (!authorizationService.isOnTheSameEstablishment(cuig)) {
+            throw new UnauthorizedException(String.format(Messages.OUTSIDE_ESTABLISHMENT, name));
+        }
+
+        return ResponseEntity.noContent().build();
     }
 
     @ApiOperation(value = "Register a new supply to the database")
