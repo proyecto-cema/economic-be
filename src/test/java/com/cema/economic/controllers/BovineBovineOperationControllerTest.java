@@ -1,11 +1,11 @@
 package com.cema.economic.controllers;
 
 
-import com.cema.economic.domain.Operation;
-import com.cema.economic.entities.CemaOperation;
+import com.cema.economic.domain.BovineOperation;
+import com.cema.economic.entities.CemaBovineOperation;
 import com.cema.economic.exceptions.NotFoundException;
 import com.cema.economic.mapping.Mapping;
-import com.cema.economic.repositories.OperationRepository;
+import com.cema.economic.repositories.BovineOperationRepository;
 import com.cema.economic.services.authorization.AuthorizationService;
 import com.cema.economic.services.client.administration.AdministrationClientService;
 import com.cema.economic.services.client.bovine.BovineClientService;
@@ -27,12 +27,12 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.openMocks;
 
-public class OperationControllerTest {
+public class BovineBovineOperationControllerTest {
 
     private final String id = "b000bba4-229e-4b59-8548-1c26508e459c";
     private final String cuig = "321";
     @Mock
-    private OperationRepository operationRepository;
+    private BovineOperationRepository bovineOperationRepository;
     @Mock
     private Mapping operationMapping;
     @Mock
@@ -40,38 +40,38 @@ public class OperationControllerTest {
     @Mock
     private BovineClientService bovineClientService;
     @Mock
-    private OperationValidationService operationValidationService;
+    private OperationValidationService bovineOperationValidationService;
     @Mock
     private AdministrationClientService administrationClientService;
     @Mock
     private UsersClientService usersClientService;
 
-    private OperationController operationController;
+    private BovineOperationController bovineOperationController;
 
     @BeforeEach
     public void setUp() {
         openMocks(this);
         when(authorizationService.isOnTheSameEstablishment(cuig)).thenReturn(true);
         when(authorizationService.getCurrentUserCuig()).thenReturn(cuig);
-        operationController = new OperationController(operationRepository, operationMapping,
-                authorizationService, bovineClientService, operationValidationService, administrationClientService,
+        bovineOperationController = new BovineOperationController(bovineOperationRepository, operationMapping,
+                authorizationService, bovineClientService, bovineOperationValidationService, administrationClientService,
                 usersClientService);
     }
 
     @Test
     public void lookUpOperationByCuigShouldAlwaysReturnOperationWhenExists() {
-        CemaOperation cemaOperation = new CemaOperation();
-        cemaOperation.setEstablishmentCuig(cuig);
-        Operation operation = Operation.builder().build();
+        CemaBovineOperation cemaBovineOperation = new CemaBovineOperation();
+        cemaBovineOperation.setEstablishmentCuig(cuig);
+        BovineOperation bovineOperation = BovineOperation.builder().build();
 
 
-        when(operationRepository.findCemaOperationById(UUID.fromString(id))).thenReturn(cemaOperation);
-        when(operationMapping.mapEntityToDomain(cemaOperation)).thenReturn(operation);
+        when(bovineOperationRepository.findCemaBovineOperationById(UUID.fromString(id))).thenReturn(cemaBovineOperation);
+        when(operationMapping.mapEntityToDomain(cemaBovineOperation)).thenReturn(bovineOperation);
 
-        ResponseEntity<Operation> result = operationController.lookUpOperationById(id);
-        Operation resultingUser = result.getBody();
+        ResponseEntity<BovineOperation> result = bovineOperationController.lookUpBovineOperationById(id);
+        BovineOperation resultingUser = result.getBody();
 
-        assertThat(resultingUser, is(operation));
+        assertThat(resultingUser, is(bovineOperation));
         HttpStatus resultingStatus = result.getStatusCode();
 
         assertThat(resultingStatus, is(HttpStatus.OK));
@@ -79,14 +79,14 @@ public class OperationControllerTest {
 
     @Test
     public void lookUpOperationByCuigShouldAlwaysReturnNotFoundWhenOperationDoesntExists() {
-        CemaOperation cemaOperation = new CemaOperation();
-        Operation operation = Operation.builder().build();
+        CemaBovineOperation cemaBovineOperation = new CemaBovineOperation();
+        BovineOperation bovineOperation = BovineOperation.builder().build();
 
-        when(operationRepository.findCemaOperationById(UUID.fromString(id))).thenReturn(null);
-        when(operationMapping.mapEntityToDomain(cemaOperation)).thenReturn(operation);
+        when(bovineOperationRepository.findCemaBovineOperationById(UUID.fromString(id))).thenReturn(null);
+        when(operationMapping.mapEntityToDomain(cemaBovineOperation)).thenReturn(bovineOperation);
 
         Exception exception = assertThrows(NotFoundException.class, () -> {
-            operationController.lookUpOperationById(id);
+            bovineOperationController.lookUpBovineOperationById(id);
         });
         String resultingMessage = exception.getMessage();
 
@@ -95,13 +95,13 @@ public class OperationControllerTest {
 
     @Test
     public void registerOperationShouldAlwaysReturnCreatedWhenOperationAddedCorrectly() {
-        CemaOperation cemaOperation = new CemaOperation();
-        Operation operation = Operation.builder().build();
-        operation.setEstablishmentCuig(cuig);
+        CemaBovineOperation cemaBovineOperation = new CemaBovineOperation();
+        BovineOperation bovineOperation = BovineOperation.builder().build();
+        bovineOperation.setEstablishmentCuig(cuig);
 
-        when(operationMapping.mapDomainToEntity(operation)).thenReturn(cemaOperation);
+        when(operationMapping.mapDomainToEntity(bovineOperation)).thenReturn(cemaBovineOperation);
 
-        ResponseEntity<Operation> result = operationController.registerOperation(operation);
+        ResponseEntity<BovineOperation> result = bovineOperationController.registerBovineOperation(bovineOperation);
 
         HttpStatus resultingStatus = result.getStatusCode();
 
@@ -110,15 +110,15 @@ public class OperationControllerTest {
 
     @Test
     public void updateOperationShouldAlwaysReturnOKWhenOperationUpdatedCorrectly() {
-        CemaOperation cemaOperation = new CemaOperation();
-        Operation operation = Operation.builder()
+        CemaBovineOperation cemaBovineOperation = new CemaBovineOperation();
+        BovineOperation bovineOperation = BovineOperation.builder()
                 .establishmentCuig(cuig)
                 .build();
 
-        when(operationRepository.findCemaOperationByIdAndEstablishmentCuigIgnoreCase(any(UUID.class), eq(cuig))).thenReturn(cemaOperation);
-        when(operationMapping.mapDomainToEntity(operation)).thenReturn(cemaOperation);
+        when(bovineOperationRepository.findCemaBovineOperationByIdAndEstablishmentCuigIgnoreCase(any(UUID.class), eq(cuig))).thenReturn(cemaBovineOperation);
+        when(operationMapping.mapDomainToEntity(bovineOperation)).thenReturn(cemaBovineOperation);
 
-        ResponseEntity<Operation> result = operationController.updateOperation(id, operation, cuig);
+        ResponseEntity<BovineOperation> result = bovineOperationController.updateBovineOperation(id, bovineOperation, cuig);
 
         HttpStatus resultingStatus = result.getStatusCode();
 
@@ -127,14 +127,14 @@ public class OperationControllerTest {
 
     @Test
     public void updateOperationShouldAlwaysReturnNotFoundWhenOperationDoesntExists() {
-        Operation operation = Operation.builder().build();
+        BovineOperation bovineOperation = BovineOperation.builder().build();
         String cuig = "1233";
 
-        when(operationRepository.findCemaOperationByIdAndEstablishmentCuigIgnoreCase(any(UUID.class), eq(cuig))).thenReturn(null);
+        when(bovineOperationRepository.findCemaBovineOperationByIdAndEstablishmentCuigIgnoreCase(any(UUID.class), eq(cuig))).thenReturn(null);
 
 
         Exception exception = assertThrows(NotFoundException.class, () ->
-                operationController.updateOperation(id, operation, cuig));
+                bovineOperationController.updateBovineOperation(id, bovineOperation, cuig));
         String resultingMessage = exception.getMessage();
 
         assertThat(resultingMessage, is("Operation with id b000bba4-229e-4b59-8548-1c26508e459c doesn't exits"));

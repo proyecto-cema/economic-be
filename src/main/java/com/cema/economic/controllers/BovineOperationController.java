@@ -1,12 +1,12 @@
 package com.cema.economic.controllers;
 
 import com.cema.economic.constants.Messages;
-import com.cema.economic.domain.Operation;
-import com.cema.economic.entities.CemaOperation;
+import com.cema.economic.domain.BovineOperation;
+import com.cema.economic.entities.CemaBovineOperation;
 import com.cema.economic.exceptions.NotFoundException;
 import com.cema.economic.exceptions.UnauthorizedException;
 import com.cema.economic.mapping.Mapping;
-import com.cema.economic.repositories.OperationRepository;
+import com.cema.economic.repositories.BovineOperationRepository;
 import com.cema.economic.services.authorization.AuthorizationService;
 import com.cema.economic.services.client.administration.AdministrationClientService;
 import com.cema.economic.services.client.bovine.BovineClientService;
@@ -43,31 +43,31 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/v1")
-@Api(produces = "application/json", value = "Allows interaction with the operation database. V1")
+@Api(produces = "application/json", value = "Allows interaction with the bovine operation database. V1")
 @Validated
 @Slf4j
-public class OperationController {
+public class BovineOperationController {
 
-    private static final String BASE_URL = "/operation/";
+    private static final String BASE_URL = "/operation/bovine/";
 
-    private final OperationRepository operationRepository;
-    private final Mapping<CemaOperation, Operation> operationMapping;
+    private final BovineOperationRepository bovineOperationRepository;
+    private final Mapping<CemaBovineOperation, BovineOperation> bovineOperationMapping;
     private final AuthorizationService authorizationService;
     private final BovineClientService bovineClientService;
-    private final OperationValidationService operationValidationService;
+    private final OperationValidationService<BovineOperation> bovineOperationValidationService;
     private final AdministrationClientService administrationClientService;
     private final UsersClientService usersClientService;
 
-    public OperationController(OperationRepository operationRepository, Mapping<CemaOperation, Operation> operationMapping,
-                               AuthorizationService authorizationService, BovineClientService bovineClientService,
-                               OperationValidationService operationValidationService,
-                               AdministrationClientService administrationClientService,
-                               UsersClientService usersClientService) {
-        this.operationRepository = operationRepository;
-        this.operationMapping = operationMapping;
+    public BovineOperationController(BovineOperationRepository bovineOperationRepository, Mapping<CemaBovineOperation, BovineOperation> bovineOperationMapping,
+                                     AuthorizationService authorizationService, BovineClientService bovineClientService,
+                                     OperationValidationService<BovineOperation> bovineOperationValidationService,
+                                     AdministrationClientService administrationClientService,
+                                     UsersClientService usersClientService) {
+        this.bovineOperationRepository = bovineOperationRepository;
+        this.bovineOperationMapping = bovineOperationMapping;
         this.authorizationService = authorizationService;
         this.bovineClientService = bovineClientService;
-        this.operationValidationService = operationValidationService;
+        this.bovineOperationValidationService = bovineOperationValidationService;
         this.administrationClientService = administrationClientService;
         this.usersClientService = usersClientService;
     }
@@ -79,42 +79,42 @@ public class OperationController {
             @ApiResponse(code = 401, message = "You are not allowed to register this operation")
     })
     @PostMapping(value = BASE_URL, produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<Operation> registerOperation(
+    public ResponseEntity<BovineOperation> registerBovineOperation(
             @ApiParam(
                     value = "Operation data to be inserted.")
-            @RequestBody @Valid Operation operation) {
+            @RequestBody @Valid BovineOperation bovineOperation) {
 
         log.info("Request to register new operation");
 
-        String cuig = operation.getEstablishmentCuig();
+        String cuig = bovineOperation.getEstablishmentCuig();
         if (!authorizationService.isOnTheSameEstablishment(cuig)) {
             throw new UnauthorizedException(String.format(Messages.OUTSIDE_ESTABLISHMENT, cuig));
         }
-        operationValidationService.validateOperation(operation);
+        bovineOperationValidationService.validateOperation(bovineOperation);
         administrationClientService.validateEstablishment(cuig);
-        usersClientService.validateUser(operation.getOperatorUserName());
+        usersClientService.validateUser(bovineOperation.getOperatorUserName());
 
-        String tag = operation.getBovineTag();
+        String tag = bovineOperation.getBovineTag();
 
         bovineClientService.validateBovine(tag, cuig);
 
-        CemaOperation newOperation = operationMapping.mapDomainToEntity(operation);
+        CemaBovineOperation newOperation = bovineOperationMapping.mapDomainToEntity(bovineOperation);
 
-        newOperation = operationRepository.save(newOperation);
+        newOperation = bovineOperationRepository.save(newOperation);
 
-        Operation updatedOperation = operationMapping.mapEntityToDomain(newOperation);
+        BovineOperation updatedBovineOperation = bovineOperationMapping.mapEntityToDomain(newOperation);
 
-        return new ResponseEntity<>(updatedOperation, HttpStatus.CREATED);
+        return new ResponseEntity<>(updatedBovineOperation, HttpStatus.CREATED);
     }
 
-    @ApiOperation(value = "Retrieve operation from cuig sent data", response = Operation.class)
+    @ApiOperation(value = "Retrieve operation from cuig sent data", response = BovineOperation.class)
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Successfully found operation"),
             @ApiResponse(code = 404, message = "Operation not found"),
             @ApiResponse(code = 401, message = "You are not allowed to view this operation")
     })
     @GetMapping(value = BASE_URL + "{id}", produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<Operation> lookUpOperationById(
+    public ResponseEntity<BovineOperation> lookUpBovineOperationById(
             @ApiParam(
                     value = "The cuig of the operation you are looking for.",
                     example = "123")
@@ -122,18 +122,18 @@ public class OperationController {
 
         log.info("Request for operation with id {}", id);
 
-        CemaOperation cemaOperation = operationRepository.findCemaOperationById(UUID.fromString(id));
-        if (cemaOperation == null) {
+        CemaBovineOperation cemaBovineOperation = bovineOperationRepository.findCemaBovineOperationById(UUID.fromString(id));
+        if (cemaBovineOperation == null) {
             throw new NotFoundException(String.format("Operation with id %s doesn't exits", id));
         }
-        String cuig = cemaOperation.getEstablishmentCuig();
+        String cuig = cemaBovineOperation.getEstablishmentCuig();
 
         if (!authorizationService.isOnTheSameEstablishment(cuig)) {
             throw new UnauthorizedException(String.format(Messages.OUTSIDE_ESTABLISHMENT, cuig));
         }
-        Operation operation = operationMapping.mapEntityToDomain(cemaOperation);
+        BovineOperation bovineOperation = bovineOperationMapping.mapEntityToDomain(cemaBovineOperation);
 
-        return new ResponseEntity<>(operation, HttpStatus.OK);
+        return new ResponseEntity<>(bovineOperation, HttpStatus.OK);
     }
 
     @ApiOperation(value = "Modifies an existent Operation")
@@ -143,14 +143,14 @@ public class OperationController {
             @ApiResponse(code = 401, message = "You are not allowed to update this operation")
     })
     @PutMapping(value = BASE_URL + "{id}", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<Operation> updateOperation(
+    public ResponseEntity<BovineOperation> updateBovineOperation(
             @ApiParam(
                     value = "The cuig of the operation we are looking for.",
                     example = "123")
             @PathVariable("id") String id,
             @ApiParam(
                     value = "The operation data we are modifying. Cuig cannot be modified and will be ignored.")
-            @RequestBody Operation operation,
+            @RequestBody BovineOperation bovineOperation,
             @ApiParam(
                     value = "The cuig of the establishment of the operation. If the user is not admin will be ignored.",
                     example = "321")
@@ -161,26 +161,26 @@ public class OperationController {
         if (!authorizationService.isAdmin()) {
             cuig = authorizationService.getCurrentUserCuig();
         }
-        operationValidationService.validateOperation(operation);
+        bovineOperationValidationService.validateOperation(bovineOperation);
         administrationClientService.validateEstablishment(cuig);
-        CemaOperation cemaOperation = operationRepository.findCemaOperationByIdAndEstablishmentCuigIgnoreCase(UUID.fromString(id), cuig);
-        if (cemaOperation == null) {
+        CemaBovineOperation cemaBovineOperation = bovineOperationRepository.findCemaBovineOperationByIdAndEstablishmentCuigIgnoreCase(UUID.fromString(id), cuig);
+        if (cemaBovineOperation == null) {
             log.info("Operation doesn't exists");
             throw new NotFoundException(String.format("Operation with id %s doesn't exits", id));
         }
 
-        operation.setEstablishmentCuig(cuig);
+        bovineOperation.setEstablishmentCuig(cuig);
 
-        cemaOperation = operationMapping.updateDomainWithEntity(operation, cemaOperation);
+        cemaBovineOperation = bovineOperationMapping.updateDomainWithEntity(bovineOperation, cemaBovineOperation);
 
-        cemaOperation = operationRepository.save(cemaOperation);
+        cemaBovineOperation = bovineOperationRepository.save(cemaBovineOperation);
 
-        Operation updatedOperation = operationMapping.mapEntityToDomain(cemaOperation);
+        BovineOperation updatedBovineOperation = bovineOperationMapping.mapEntityToDomain(cemaBovineOperation);
 
-        return new ResponseEntity<>(updatedOperation, HttpStatus.OK);
+        return new ResponseEntity<>(updatedBovineOperation, HttpStatus.OK);
     }
 
-    @ApiOperation(value = "Retrieve operations for your cuig", response = Operation.class)
+    @ApiOperation(value = "Retrieve operations for your cuig", response = BovineOperation.class)
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Listed all operations", responseHeaders = {
                     @ResponseHeader(name = "total-elements", response = String.class, description = "Total number of search results"),
@@ -189,7 +189,7 @@ public class OperationController {
             })
     })
     @GetMapping(value = BASE_URL + "list", produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<List<Operation>> listOperations(
+    public ResponseEntity<List<BovineOperation>> listBovineOperations(
             @ApiParam(
                     value = "The page you want to retrieve.",
                     example = "1")
@@ -202,22 +202,22 @@ public class OperationController {
         String cuig = authorizationService.getCurrentUserCuig();
         Pageable paging = PageRequest.of(page, size);
 
-        Page<CemaOperation> cemaOperationPage;
+        Page<CemaBovineOperation> cemaOperationPage;
         if (authorizationService.isAdmin()) {
-            cemaOperationPage = operationRepository.findAll(paging);
+            cemaOperationPage = bovineOperationRepository.findAll(paging);
         } else {
-            cemaOperationPage = operationRepository.findAllByEstablishmentCuig(cuig, paging);
+            cemaOperationPage = bovineOperationRepository.findAllByEstablishmentCuig(cuig, paging);
         }
 
-        List<CemaOperation> cemaOperations = cemaOperationPage.getContent();
+        List<CemaBovineOperation> cemaBovineOperations = cemaOperationPage.getContent();
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.set("total-elements", String.valueOf(cemaOperationPage.getTotalElements()));
         responseHeaders.set("total-pages", String.valueOf(cemaOperationPage.getTotalPages()));
         responseHeaders.set("current-page", String.valueOf(cemaOperationPage.getNumber()));
 
-        List<Operation> operations = cemaOperations.stream().map(operationMapping::mapEntityToDomain).collect(Collectors.toList());
+        List<BovineOperation> bovineOperations = cemaBovineOperations.stream().map(bovineOperationMapping::mapEntityToDomain).collect(Collectors.toList());
 
-        return ResponseEntity.ok().headers(responseHeaders).body(operations);
+        return ResponseEntity.ok().headers(responseHeaders).body(bovineOperations);
     }
 
 }

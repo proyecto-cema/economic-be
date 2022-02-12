@@ -3,9 +3,11 @@ package com.cema.economic.controllers;
 import com.cema.economic.constants.Messages;
 import com.cema.economic.domain.Supply;
 import com.cema.economic.entities.CemaSupply;
+import com.cema.economic.entities.CemaSupplyOperation;
 import com.cema.economic.exceptions.AlreadyExistsException;
 import com.cema.economic.exceptions.NotFoundException;
 import com.cema.economic.exceptions.UnauthorizedException;
+import com.cema.economic.exceptions.ValidationException;
 import com.cema.economic.mapping.Mapping;
 import com.cema.economic.repositories.SupplyRepository;
 import com.cema.economic.services.authorization.AuthorizationService;
@@ -25,6 +27,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -225,9 +228,13 @@ public class SupplyController {
         if (!authorizationService.isAdmin() || !StringUtils.hasLength(cuig)) {
             cuig = authorizationService.getCurrentUserCuig();
         }
+
         log.info("Request to delete supply with name {} and cuig {}", name, cuig);
         CemaSupply cemaSupply = supplyRepository.findCemaSupplyByNameAndEstablishmentCuigIgnoreCase(name, cuig);
         if (cemaSupply != null) {
+            if(!authorizationService.isAdmin() && !databaseService.canBeDeleted(name, cuig)){
+                throw new ValidationException(String.format("Supply %s cannot be deleted because it has operations associated", name));
+            }
             log.info("Supply exists, deleting");
             supplyRepository.delete(cemaSupply);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
