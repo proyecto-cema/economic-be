@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class BovineOperationController {
 
-    private static final String BASE_URL = "/operation/bovine/";
+    private static final String BASE_URL = "/bovine-operations/";
 
     private final BovineOperationRepository bovineOperationRepository;
     private final Mapping<CemaBovineOperation, BovineOperation> bovineOperationMapping;

@@ -53,7 +53,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class SupplyOperationController {
 
-    private static final String BASE_URL = "/operation/supply/";
+    private static final String BASE_URL = "/supply-operations/";
 
     private final SupplyOperationRepository supplyOperationRepository;
     private final Mapping<CemaSupplyOperation, SupplyOperation> supplyOperationMapping;
