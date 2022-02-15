@@ -5,22 +5,28 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import java.util.Date;
 import java.util.UUID;
 
 @Entity
-@Table(name = "operation")
+@Table(name = "supply_operation")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CemaOperation {
+public class CemaSupplyOperation {
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(
@@ -29,15 +35,6 @@ public class CemaOperation {
     )
     @Column(name = "id")
     private UUID id;
-
-    @Column(name = "bovine_tag")
-    private String bovineTag;
-
-    @Column(name = "seller_name")
-    private String sellerName;
-
-    @Column(name = "buyer_name")
-    private String buyerName;
 
     @Column(name = "operation_type")
     private String operationType;
@@ -56,4 +53,22 @@ public class CemaOperation {
 
     @Column(name = "establishment_cuig")
     private String establishmentCuig;
+
+    @ManyToOne(cascade = { CascadeType.REMOVE })
+    @JoinColumn(name="supply_id")
+    private CemaSupply cemaSupply;
+
+    @Override
+    public String toString() {
+        return "CemaSupplyOperation{" +
+                "id=" + id +
+                ", operationType='" + operationType + '\'' +
+                ", operatorName='" + operatorName + '\'' +
+                ", amount=" + amount +
+                ", description='" + description + '\'' +
+                ", transactionDate=" + transactionDate +
+                ", establishmentCuig='" + establishmentCuig + '\'' +
+                ", cemaSupply=" + cemaSupply.getName() +
+                '}';
+    }
 }

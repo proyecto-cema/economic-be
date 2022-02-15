@@ -1,16 +1,17 @@
 package com.cema.economic.domain;
 
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import javax.validation.constraints.NotEmpty;
 
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Category {
 
     @ApiModelProperty(notes = "The name of this category", example = "Alimento")

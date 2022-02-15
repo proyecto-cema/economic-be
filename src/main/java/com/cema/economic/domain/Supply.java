@@ -1,8 +1,10 @@
 package com.cema.economic.domain;
 
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotEmpty;
@@ -10,6 +12,8 @@ import javax.validation.constraints.NotNull;
 
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Supply {
 
     @ApiModelProperty(notes = "The units to measure this supply", example = "Kg")
