@@ -1,7 +1,9 @@
 package com.cema.economic.controllers;
 
 import com.cema.economic.constants.Messages;
+import com.cema.economic.constants.OperationType;
 import com.cema.economic.domain.AvailableSupply;
+import com.cema.economic.domain.BovineOperation;
 import com.cema.economic.domain.SupplyOperation;
 import com.cema.economic.entities.CemaSupply;
 import com.cema.economic.entities.CemaSupplyOperation;
@@ -25,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -286,7 +289,7 @@ public class SupplyOperationController {
             @RequestParam(value = "size", required = false, defaultValue = "10") int size) {
 
         String cuig = authorizationService.getCurrentUserCuig();
-        Pageable paging = PageRequest.of(page, size);
+        Pageable paging = PageRequest.of(page, size, Sort.by("transactionDate").descending());
 
         Page<CemaSupplyOperation> cemaOperationPage;
         if (authorizationService.isAdmin()) {
@@ -304,6 +307,24 @@ public class SupplyOperationController {
         List<SupplyOperation> supplyOperations = cemaSupplyOperations.stream().map(supplyOperationMapping::mapEntityToDomain).collect(Collectors.toList());
 
         return ResponseEntity.ok().headers(responseHeaders).body(supplyOperations);
+    }
+
+    @ApiOperation(value = "Retrieve the total for spending in supplies", response = BovineOperation.class)
+    @ApiResponse(code = 200, message = "Returned total spending")
+    @GetMapping(value = BASE_URL + "total", produces = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<Long> getTotal(
+            @ApiParam(
+                    value = "The cuig of the establishment of the operation. If the user is not admin will be ignored.",
+                    example = "321")
+            @RequestParam(value = "cuig") String cuig) {
+
+        if (!authorizationService.isAdmin()) {
+            cuig = authorizationService.getCurrentUserCuig();
+        }
+
+        Long spending = supplyOperationRepository.getSumForOperationType(cuig, OperationType.BUY);
+
+        return ResponseEntity.ok().body(spending);
     }
 
 }

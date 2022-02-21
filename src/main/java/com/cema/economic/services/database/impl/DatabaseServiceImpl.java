@@ -51,7 +51,7 @@ public class DatabaseServiceImpl implements DatabaseService {
 
     @Override
     public CemaSupplyOperation saveSupplyOperation(CemaSupplyOperation cemaSupplyOperation, String supplyName) {
-        CemaSupply cemaSupply = supplyRepository.findCemaSupplyByNameIgnoreCase(supplyName);
+        CemaSupply cemaSupply = supplyRepository.findCemaSupplyByNameAndEstablishmentCuigIgnoreCase(supplyName, cemaSupplyOperation.getEstablishmentCuig());
         if (cemaSupply == null) {
             throw new NotFoundException(String.format("The supply %s does not exists", supplyName));
         }

@@ -1,7 +1,9 @@
 package com.cema.economic.controllers;
 
 import com.cema.economic.constants.Messages;
+import com.cema.economic.constants.OperationType;
 import com.cema.economic.domain.BovineOperation;
+import com.cema.economic.domain.IncomeResponse;
 import com.cema.economic.entities.CemaBovineOperation;
 import com.cema.economic.exceptions.NotFoundException;
 import com.cema.economic.exceptions.UnauthorizedException;
@@ -22,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -200,7 +203,7 @@ public class BovineOperationController {
             @RequestParam(value = "size", required = false, defaultValue = "10") int size) {
 
         String cuig = authorizationService.getCurrentUserCuig();
-        Pageable paging = PageRequest.of(page, size);
+        Pageable paging = PageRequest.of(page, size, Sort.by("transactionDate").descending());
 
         Page<CemaBovineOperation> cemaOperationPage;
         if (authorizationService.isAdmin()) {
@@ -218,6 +221,36 @@ public class BovineOperationController {
         List<BovineOperation> bovineOperations = cemaBovineOperations.stream().map(bovineOperationMapping::mapEntityToDomain).collect(Collectors.toList());
 
         return ResponseEntity.ok().headers(responseHeaders).body(bovineOperations);
+    }
+
+    @ApiOperation(value = "Retrieve the total for spending vs income", response = IncomeResponse.class)
+    @ApiResponse(code = 200, message = "Returned totals")
+    @GetMapping(value = BASE_URL + "total", produces = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<IncomeResponse> getTotal(
+            @ApiParam(
+                    value = "The cuig of the establishment of the operation. If the user is not admin will be ignored.",
+                    example = "321")
+            @RequestParam(value = "cuig") String cuig) {
+
+        if (!authorizationService.isAdmin()) {
+            cuig = authorizationService.getCurrentUserCuig();
+        }
+
+        Long income = bovineOperationRepository.getSumForOperationType(cuig, OperationType.SELL);
+        Long spending = bovineOperationRepository.getSumForOperationType(cuig, OperationType.BUY);
+
+        if (income == null) {
+            income = 0L;
+        }
+        if (spending == null) {
+            spending = 0L;
+        }
+        IncomeResponse incomeResponse = IncomeResponse.builder()
+                .income(income)
+                .spending(spending)
+                .total(income - spending)
+                .build();
+        return ResponseEntity.ok().body(incomeResponse);
     }
 
 }

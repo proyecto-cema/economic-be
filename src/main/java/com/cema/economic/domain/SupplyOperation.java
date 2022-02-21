@@ -1,5 +1,6 @@
 package com.cema.economic.domain;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -38,6 +39,7 @@ public class SupplyOperation {
     private String operatorUserName;
     @ApiModelProperty(notes = "The date when this operation took place", example = "2021-02-12")
     @NotNull
+    @JsonFormat(timezone = "America/Buenos_Aires")
     private Date transactionDate;
     @ApiModelProperty(notes = "The name of the supply involved in this operation", example = "heno")
     @NotEmpty(message = "supply name is required")

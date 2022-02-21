@@ -14,8 +14,6 @@ public interface SupplyRepository extends JpaRepository<CemaSupply, String> {
 
     CemaSupply findCemaSupplyByNameAndEstablishmentCuigIgnoreCase(String name, String cuig);
 
-    CemaSupply findCemaSupplyByNameIgnoreCase(String name);
-
     Page<CemaSupply> findAllByEstablishmentCuig(String cuig, Pageable paging);
 
     @Query("select sup.name from CemaSupply sup where sup.establishmentCuig =?1")
