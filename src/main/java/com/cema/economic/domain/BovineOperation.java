@@ -1,10 +1,12 @@
 package com.cema.economic.domain;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -43,5 +45,6 @@ public class BovineOperation {
     private String operatorUserName;
     @ApiModelProperty(notes = "The date when this operation took place", example = "2021-02-12")
     @NotNull
+    @JsonFormat(timezone = "America/Buenos_Aires")
     private Date transactionDate;
 }

@@ -78,23 +78,25 @@ public class SupplyController {
             @ApiResponse(code = 422, message = "Invalid Supply")
     })
     @GetMapping(value = BASE_URL + "validate/{name}", produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<Void> validateSupplyByCuig(
+    public ResponseEntity<Void> validateSupplyByName(
             @ApiParam(
                     value = "The name of the supply you are looking for.",
                     example = "123")
-            @PathVariable("name") String name) {
+            @PathVariable("name") String name,
+            @ApiParam(
+                    value = "The cuig of the establishment of the supply. If the user is not admin will be ignored.",
+                    example = "312")
+            @RequestParam(value = "cuig", required = false) String cuig) {
 
         log.info("Request to validate supply with {}", name);
 
-        CemaSupply cemaSupply = supplyRepository.findCemaSupplyByNameIgnoreCase(name);
-        if (cemaSupply == null) {
-            throw new NotFoundException(String.format("Supply with name %s doesn't exits", name));
+        if (!authorizationService.isAdmin() || !StringUtils.hasLength(cuig)) {
+            cuig = authorizationService.getCurrentUserCuig();
         }
 
-        String cuig = cemaSupply.getEstablishmentCuig();
-
-        if (!authorizationService.isOnTheSameEstablishment(cuig)) {
-            throw new UnauthorizedException(String.format(Messages.OUTSIDE_ESTABLISHMENT, name));
+        CemaSupply cemaSupply = supplyRepository.findCemaSupplyByNameAndEstablishmentCuigIgnoreCase(name, cuig);
+        if (cemaSupply == null) {
+            throw new NotFoundException(String.format("Supply with name %s doesn't exits", name));
         }
 
         return ResponseEntity.noContent().build();
